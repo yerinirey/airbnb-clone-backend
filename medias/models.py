@@ -6,16 +6,19 @@ class Photo(CommonModel):
     description = models.CharField(max_length=140,)
     room = models.ForeignKey("rooms.Room",
                             null=True, blank=True,
-                             on_delete=models.CASCADE)
+                             on_delete=models.CASCADE,
+                             related_name="photos",)
     experience = models.ForeignKey("experiences.Experience",
                                     null=True, blank=True,
-                                    on_delete=models.CASCADE)
+                                    on_delete=models.CASCADE,
+                                    related_name="photos",)
     def __init__(self):
         return "Photo File"
 
 class Video(CommonModel):
     file = models.FileField()
     experience = models.OneToOneField("experiences.Experience",
-                                      on_delete=models.CASCADE)
+                                      on_delete=models.CASCADE,
+                                      related_name="videos",)
     def __init__(self):
         return "Video File"
