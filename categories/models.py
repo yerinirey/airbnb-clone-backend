@@ -6,7 +6,7 @@ class Category(CommonModel):
 
     """ Room or Experience Category """
     class CategoryKindChoices(models.TextChoices):
-        ROOMS = ("room", "Room")
+        ROOMS = ("rooms", "Rooms")
         EXPERIENCES = ("experiences", "Experiences")
 
 
