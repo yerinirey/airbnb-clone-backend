@@ -12,7 +12,7 @@ class Photo(CommonModel):
                                     null=True, blank=True,
                                     on_delete=models.CASCADE,
                                     related_name="photos",)
-    def __init__(self):
+    def __str__(self):
         return "Photo File"
 
 class Video(CommonModel):
@@ -20,5 +20,5 @@ class Video(CommonModel):
     experience = models.OneToOneField("experiences.Experience",
                                       on_delete=models.CASCADE,
                                       related_name="videos",)
-    def __init__(self):
+    def __str__(self):
         return "Video File"
