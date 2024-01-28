@@ -88,7 +88,7 @@ class Rooms(APIView):
                     for amenity_pk in amenities:
                         amenity = Amenity.objects.get(pk=amenity_pk)
                         room.amenities.add(amenity)
-                    serializer = serializers.RoomDetailSerializer(room)
+                    serializer = serializers.RoomDetailSerializer(room, context={"request": request})
                     return Response(serializer.data)
             except Exception:
                 raise ParseError("Amenity not found")
@@ -128,7 +128,7 @@ class RoomDetail(APIView):
                     category = Category.objects.get(pk=category_pk)
                     if category.kind == Category.CategoryKindChoices.EXPERIENCES:
                         raise ParseError("The category kind should be 'rooms'.")
-                except category.DoesNotExist:
+                except:
                     raise ParseError("Category not found.")
                 
             try:
@@ -148,10 +148,14 @@ class RoomDetail(APIView):
                             room.amenities.add(amenity)
                     elif amenities == []:
                         room.amenities.clear()
-                    return Response(serializers.RoomDetailSerializer(room).data)
-            except Exception:
+                    serializer = serializers.RoomDetailSerializer(room, context={"request": request})
+                    return Response(serializer.data)
+            except Amenity.DoesNotExist:
                 # because of the transaction, the room will not change.
                 raise ParseError("Amenity not found.")
+            except Exception as e:
+                raise ParseError(serializer.errors)
+
         else:
             return Response(serializer.errors)
 

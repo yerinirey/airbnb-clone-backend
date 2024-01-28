@@ -23,6 +23,23 @@ class Experience(CommonModel):
     )
     def __str__(self):
         return self.name
+    def rating(self):
+        count = self.reviews.count()
+        if count == 0:
+            return 0.0
+        else:
+            total_rating = 0
+            for review in self.reviews.all().values("rating"):
+                total_rating += review["rating"]
+            return round(total_rating/count, 2)
+    def total_time(self):
+        seconds = (self.end.hour * 3600 + self.end.minute * 60 + self.end.second) - (
+            self.start.hour * 3600 + self.start.minute * 60 + self.start.second
+        )
+        hours, remainder = divmod(seconds, 3600)
+        minutes, _ = divmod(remainder, 60)
+        return f"{hours}H {minutes}M"
+
 
 class Perk(CommonModel):
 
