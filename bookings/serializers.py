@@ -3,6 +3,28 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from .models import Booking
 
+class CreateExperienceBookingSerializer(ModelSerializer):
+    experience_time = serializers.DateTimeField()
+    class Meta:
+        model = Booking
+        fields = (
+            "experience_time",
+            "guests",
+        )
+
+    def validate_experience_time(self, value):
+        ex_start_time = self.context["experience"].start
+        ex_end_time = self.context["experience"].end
+        now = timezone.localtime(timezone.now())
+        if value < now:
+            raise serializers. ValidationError("Can't book in the past.")
+        if Booking.objects.filter(experience_time__date=value.date()).exists():
+            raise serializers.ValidationError("There are already someone's reservation for that date.")
+        if value.time() <= ex_start_time or value.time() >= ex_end_time:
+            raise serializers.ValidationError("Please book at a valid time.")
+        return value
+    
+
 class CreateRoomBookingSerializer(ModelSerializer): 
     check_in = serializers.DateField()
     check_out = serializers.DateField()
@@ -35,8 +57,6 @@ class CreateRoomBookingSerializer(ModelSerializer):
             raise serializers.ValidationError("Those (or some of those) dates are already taken.")
         return data
 
-
-
 class PublicBookingSerializer(ModelSerializer):
 
     class Meta:
@@ -48,3 +68,8 @@ class PublicBookingSerializer(ModelSerializer):
             "experience_time",
             "guests",
         )
+
+class PrivateBookingSerializer(ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = "__all__"

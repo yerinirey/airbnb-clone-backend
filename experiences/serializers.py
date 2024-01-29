@@ -7,7 +7,11 @@ from categories.serializers import CategorySerializer
 class PerkSerializer(ModelSerializer):
     class Meta:
         model = Perk
-        fields = "__all__"
+        fields = (
+            "name",
+            "details",
+            "explanation"
+        )
 
 class ExperienceDetailSerializer(ModelSerializer):
     host = user_serializers.TinyUserSerializer(read_only=True)
@@ -42,17 +46,17 @@ class ExperienceListSerializer(ModelSerializer):
 
     class Meta:
         model = Experience
-        # fields = (
-        #     "pk",
-        #     "name",
-        #     "country",
-        #     "city",
-        #     "price",
-        #     "rating",
-        #     "is_owner",
-        #     "video",
-        # )
-        fields = "__all__"
+        fields = (
+            "pk",
+            "name",
+            "country",
+            "city",
+            "price",
+            "total_time",
+            "rating",
+            "is_owner",
+            "video",
+        )
     
     def get_rating(self, experience):
         return experience.rating()

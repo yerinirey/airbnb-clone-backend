@@ -1,10 +1,12 @@
+from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ParseError
 from rest_framework.status import HTTP_200_OK
 from .models import Wishlist
 from rooms.models import Room
+from experiences.models import Experience
 from .serializers import WishlistSerializer
 class Wishlists(APIView):
 
@@ -18,10 +20,28 @@ class Wishlists(APIView):
     def post(self, request):
         serializer = WishlistSerializer(data=request.data)
         if serializer.is_valid():
-            wishlist = serializer.save(
-                user=request.user
-            )
-            serializer = WishlistSerializer(wishlist)
+            rooms = request.data.get("rooms")
+            experiences = request.data.get("experiences")
+            try:
+                with transaction.atomic():
+                    wishlist = serializer.save(
+                        user=request.user
+                    )
+                    if rooms:
+                        for room_pk in rooms:
+                            room = Room.objects.get(pk=room_pk)
+                            wishlist.rooms.add(room)
+                    if experiences:
+                        for experience_pk in experiences:
+                            experience = Experience.objects.get(pk=experience_pk)
+                            wishlist.experiences.add(experience)   
+            except Room.DoesNotExist:
+                raise ParseError("Room Not Found")
+            except Experience.DoesNotExist:
+                raise ParseError("Experience Not Found")
+            except Exception as e:
+                raise ParseError(e)
+            serializer = WishlistSerializer(wishlist, context={"request": request})
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
@@ -55,7 +75,7 @@ class WishlistDetail(APIView):
         else:
             return Response(serializer.errors)
 
-class WishlistToggle(APIView):
+class WishlistRoomToggle(APIView):
     def get_list(self, pk, user):
         try:
             return Wishlist.objects.get(pk=pk, user=user)
@@ -74,4 +94,25 @@ class WishlistToggle(APIView):
             wishlist.rooms.remove(room)
         else:
             wishlist.rooms.add(room)
+        return Response(status=HTTP_200_OK)
+    
+class WishlistExperienceToggle(APIView):
+    def get_list(self, pk, user):
+        try:
+            return Wishlist.objects.get(pk=pk, user=user)
+        except Wishlist.DoesNotExist:
+            raise NotFound
+    def get_experience(self, pk):
+        try:
+            return Experience.objects.get(pk=pk)
+        except Experience.DoesNotExist:
+            raise NotFound
+        
+    def put(self, request, pk, experience_pk):
+        wishlist = self.get_list(pk, request.user)
+        experience = self.get_experience(experience_pk)
+        if wishlist.experiences.filter(pk=experience.pk).exists():
+            wishlist.experiences.remove(experience)
+        else:
+            wishlist.experiences.add(experience)
         return Response(status=HTTP_200_OK)
