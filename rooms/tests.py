@@ -1,5 +1,6 @@
 from rest_framework.test import APITestCase
 from . import models
+import string, random
 class TestAmenities(APITestCase):
     NAME = "Amenity Test"
     DESC = "Amenity Description"
@@ -36,6 +37,7 @@ class TestAmenities(APITestCase):
 class TestAmenity(APITestCase):
     NAME = "Test Amenity"
     DESC = "Test Desc"
+    URL = "/api/v1/rooms/amenities/1"
     def setUp(self):
         models.Amenity.objects.create(name=self.NAME, description=self.DESC)
 
@@ -44,8 +46,7 @@ class TestAmenity(APITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_amenity(self):
-
-        response = self.client.get("/api/v1/rooms/amenities/1")
+        response = self.client.get(self.URL)
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
@@ -54,9 +55,23 @@ class TestAmenity(APITestCase):
         self.assertEqual(data["description"], self.DESC)
     
     def test_put_amenity(self):
-        # code challenge
-        pass
+        new_amenity_name = "New Test Amenity"
+        wrong_amenity_name= ''.join(random.choice(string.ascii_letters) for _ in range(151))
+        response = self.client.put(self.URL, data={"name": new_amenity_name})
+        self.assertEqual(response.status_code,200, "Not 200 status code")
+        
+        data = response.json()
+        self.assertLessEqual(len(data["name"]), 150, "maximum length is 150 characters")
+        self.assertEqual(data["name"], new_amenity_name)
+        self.assertEqual(data["description"], self.DESC)
+        # 예외문
+        response = self.client.put(self.URL, data={"name": wrong_amenity_name})
+        data= response.json()
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("name", data)
+
+
 
     def test_delete_amenity(self):
-        response = self.client.delete("/api/v1/rooms/amenities/1")
+        response = self.client.delete(self.URL)
         self.assertEqual(response.status_code, 204)
