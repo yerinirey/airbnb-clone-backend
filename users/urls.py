@@ -10,6 +10,7 @@ urlpatterns = [
     path("jwt-login", views.JWTLogin.as_view()),
     path("github", views.GithubLogIn.as_view()),
     path("kakao", views.KakaoLogIn.as_view()),
+    path("sign-up", views.SignUp.as_view()),
     path("@<str:username>",views.PublicUser.as_view()),
     path("change-password",views.ChangePassword.as_view()),
 ]
